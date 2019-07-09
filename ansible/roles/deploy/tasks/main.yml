@@ -1,0 +1,55 @@
+- name: prepare some dirs
+  file: name={{ item }} state=directory
+  with_items:
+  - "{{ etcd_ssl_dir }}"
+  - "{{ k8s_ssl_dir }}"
+  - "{{ base_dir }}"
+  - "/data/etcd"
+  - "/k8s/etcd/cfg"
+  - "/k8s/kubernetes/cfg"
+
+
+- name: 下载证书工具 CFSSL和 kubectl
+  copy: src={{ base_dir }}/bin/{{ item }} dest=/usr/bin  mode=0755
+  with_items:
+  - cfssl
+  - cfssl-certinfo
+  - cfssljson
+  - kubectl
+
+# 注册变量p，根据p的stat信息判断是否已经生成过etcd_ca证书，如果没有，下一步生成证书
+# 如果已经有Etcd_ca证书，为了保证整个安装的幂等性，跳过证书生成的步骤
+- name: 读取ca证书stat信息
+  stat: path="{{ etcd_ssl_dir }}/ca.pem"
+  register: p
+
+- name: 准备Etcd_CA配置文件
+  template: src=etcd-ca-config.json.j2 dest={{ etcd_ssl_dir }}/ca-config.json
+  when: p.stat.isreg is not defined
+
+- name: 准备CA签名请求
+  template: src=etcd-ca-csr.json.j2 dest={{ etcd_ssl_dir }}/ca-csr.json
+  when: p.stat.isreg is not defined
+
+- name: 生成 CA 证书和私钥
+  when: p.stat.isreg is not defined
+  shell: "cd {{ etcd_ssl_dir }} && cfssl gencert -initca ca-csr.json | cfssljson -bare ca" 
+
+# 注册变量q，根据q的stat信息判断是否已经生成过k8s_ca证书，如果没有，下一步生成证书
+# 如果已经有k8s_ca证书，为了保证整个安装的幂等性，跳过证书生成的步骤
+- name: 读取ca证书stat信息
+  stat: path="{{ k8s_ssl_dir }}/ca.pem"
+  register: q
+
+- name: 准备k8s_CA配置文件
+  template: src=k8s-ca-config.json.j2 dest={{ k8s_ssl_dir }}/ca-config.json
+  when: q.stat.isreg is not defined
+
+- name: 准备CA签名请求
+  template: src=k8s-ca-csr.json.j2 dest={{ k8s_ssl_dir }}/ca-csr.json
+  when: q.stat.isreg is not defined
+
+- name: 生成 CA 证书和私钥
+  when: q.stat.isreg is not defined
+  shell: "cd {{ k8s_ssl_dir }} && cfssl gencert -initca ca-csr.json | cfssljson -bare ca"
+

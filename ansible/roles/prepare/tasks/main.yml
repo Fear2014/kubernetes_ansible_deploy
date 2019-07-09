@@ -1,0 +1,19 @@
+- name: prepare some dirs
+  file: name={{ item }} state=directory
+  with_items:
+  - "{{ etcd_ssl_dir }}"
+  - "{{ k8s_ssl_dir }}"
+  - "/data/etcd"
+  - "/k8s/etcd/cfg"
+  - "/k8s/kubernetes/cfg"
+  - "/k8s/kubernetes/yml"
+  - "/etc/cni/net.d"
+  - "/opt/cni/bin"
+  
+- name: 分发证书工具 CFSSL
+  copy: src={{ base_dir }}/bin/{{ item }} dest=/usr/bin mode=0755
+  with_items:
+  - cfssl
+  - cfssl-certinfo
+  - cfssljson
+

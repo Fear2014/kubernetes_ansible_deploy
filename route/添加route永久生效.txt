@@ -1,0 +1,12 @@
+建立 rc-local.service 文件
+
+创建文件 rc.local
+
+给 rc.local 加上权限，启用服务
+sudo chmod 755 /etc/rc.local
+sudo systemctl enable rc-local
+
+
+启动服务并检查状态
+sudo systemctl start rc-local.service
+sudo systemctl status rc-local.service

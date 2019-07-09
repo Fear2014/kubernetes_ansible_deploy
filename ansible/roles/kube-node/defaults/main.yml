@@ -1,0 +1,22 @@
+﻿# etcd 集群服务地址列表, 根据etcd组成员自动生成
+TMP_ENDPOINTS: "{% for h in groups['etcd'] %}https://{{ h }}:2379,{% endfor %}"
+ETCD_ENDPOINTS: "{{ TMP_ENDPOINTS.rstrip(',') }}"
+
+
+# 基础容器镜像
+SANDBOX_IMAGE: "mirrorgooglecontainers/pause-amd64:3.1"
+#SANDBOX_IMAGE: "registry.access.redhat.com/rhel7/pod-infrastructure:latest"
+
+# Kubelet 根目录
+KUBELET_ROOT_DIR: "/var/lib/kubelet"
+
+# node节点最大pod 数
+MAX_PODS: 110
+
+# 配置为kube组件（kubelet,kube-proxy,dockerd等）预留的资源量
+KUBE_RESERVED: "cpu=200m,memory=500Mi,ephemeral-storage=1Gi"
+
+# 配置kubelet的hard eviction条件
+HARD_EVICTION: "memory.available<200Mi,nodefs.available<10%"
+
+BASIC_AUTH_PASS: _token_

@@ -1,0 +1,130 @@
+﻿# 下载二进制，分发kube相关证书
+
+- name: 分发证书相关
+  copy: src={{ k8s_ssl_dir }}/{{ item }} dest={{ k8s_ssl_dir }}/{{ item }}
+  with_items:
+  - ca.pem
+  - ca-key.pem
+  - server.pem
+  - server-key.pem
+  - token.csv 
+
+- name: 下载cni相关二进制文件
+  copy: src={{ base_dir }}/bin/{{ item }}  dest=/opt/cni/bin/{{ item }} mode=0755
+  with_items:
+  - bridge
+  - host-local
+  - loopback
+  - portmap
+
+- name: 下载 kubelet 二进制
+  copy: src={{ base_dir }}/bin/{{ item }} dest={{ bin_dir }}/{{ item }} mode=0755
+  with_items:
+  - kubectl
+  - kubelet
+  tags: upgrade_k8s
+
+- name: 下载kube-router镜像
+  copy: src={{ base_dir }}/down/kube-router.tar dest=/home/kube-router.tar
+  tags: upgrade_k8s
+  
+- name: load images
+  shell: "docker load -i /home/kube-router.tar"
+  tags: upgrade_k8s
+  
+- name: 下载busybox镜像
+  copy: src={{ base_dir }}/down/busybox.tar dest=/home/busybox.tar
+  tags: upgrade_k8s
+  
+- name: load images
+  shell: "docker load -i /home/busybox.tar"
+  tags: upgrade_k8s
+#创建kubelet bootstrap kubeconfig文件
+#获取token
+- name: 获取token
+  shell: "Token=`cat {{ k8s_ssl_dir }}/token.csv |awk -F ',' '{print $1}'`; 
+    echo $Token;"
+  connection: local
+  register: TMP_PASS
+  run_once: true
+
+- name: 设置token
+  set_fact: BASIC_AUTH_PASS="{{ TMP_PASS.stdout }}"
+
+
+- name: 分发 paus镜像文件
+  copy: src={{ base_dir }}/down/pause_3.1.tar dest=/home
+
+- name: load paus镜像文件
+  shell: docker load -i  /home/pause_3.1.tar 
+
+# 创建kubelet.kubeconfig 
+- name: 设置集群参数
+  shell: "cd /k8s/kubernetes/cfg && {{ bin_dir }}/kubectl config set-cluster kubernetes \
+        --certificate-authority={{ k8s_ssl_dir }}/ca.pem \
+        --embed-certs=true \
+        --server={{ KUBE_APISERVER }} \
+	    --kubeconfig=bootstrap.kubeconfig"
+
+- name: 设置客户端认证参数
+  shell: "cd /k8s/kubernetes/cfg && {{ bin_dir }}/kubectl config set-credentials kubelet-bootstrap \
+        --token={{ BASIC_AUTH_PASS }} \
+	    --kubeconfig=bootstrap.kubeconfig"
+
+- name: 设置上下文参数
+  shell: "cd /k8s/kubernetes/cfg && {{ bin_dir }}/kubectl config set-context default \
+        --cluster=kubernetes \
+	    --user=kubelet-bootstrap \
+	    --kubeconfig=bootstrap.kubeconfig"
+
+- name: 选择默认上下文
+  shell: "cd /k8s/kubernetes/cfg && {{ bin_dir }}/kubectl config use-context default \
+	    --kubeconfig=bootstrap.kubeconfig"
+
+
+
+#创建kubelet配置文件
+- name: 创建kubelet.config
+  template: src=kubelet.config.j2 dest=/k8s/kubernetes/cfg/kubelet.config
+  tags: upgrade_k8s, restart_node
+
+- name: 创建kubelet
+  template: src=kubelet.j2 dest=/k8s/kubernetes/cfg/kubelet 
+  tags: upgrade_k8s, restart_node
+
+
+- name: 创建kubelet的systemd unit文件
+  template: src=kubelet.service.j2 dest=/etc/systemd/system/kubelet.service
+  tags: upgrade_k8s, restart_node 
+
+- name: 开机启用kubelet 服务
+  shell: systemctl enable kubelet
+  ignore_errors: true
+
+- name: 开启kubelet 服务
+  shell: systemctl daemon-reload && systemctl restart kubelet
+  tags: upgrade_k8s, restart_node
+
+
+
+
+
+#-------kube-route部分----------------
+#approve csr
+- name: approve cs
+  shell: "sleep 10 && {{ bin_dir }}/kubectl get csr|grep 'Pending' | awk 'NR>0{print $1}'| xargs  {{ bin_dir }}/kubectl certificate approve"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: true
+#打标签
+- name: tag node
+  shell: "sleep 10 && kubectl label node {{ inventory_hostname }}  kubernetes.io/role={{ ROLE_NAME }} --overwrite"
+  delegate_to: "{{ groups.deploy[0] }}"
+#启动router
+- name: 创建kube-router yml文件
+  template: src=generic-kuberouter-all-features.yaml.j2 dest=/k8s/kubernetes/yml/generic-kuberouter-all-features.yaml
+  delegate_to: "{{ groups.deploy[0] }}"
+  tags: upgrade_k8s, restart_node
+
+- name: 运行kube-router
+  shell: "{{ bin_dir }}/kubectl apply -f /k8s/kubernetes/yml/generic-kuberouter-all-features.yaml"
+  delegate_to: "{{ groups.deploy[0] }}"  

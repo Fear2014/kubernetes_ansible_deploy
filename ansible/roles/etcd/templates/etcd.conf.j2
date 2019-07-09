@@ -1,0 +1,22 @@
+#[Member]
+ETCD_NAME={{ NODE_NAME }}
+ETCD_DATA_DIR="/data/etcd"
+ETCD_LISTEN_PEER_URLS="https://{{ inventory_hostname }}:2380"
+ETCD_LISTEN_CLIENT_URLS="https://{{ inventory_hostname }}:2379"
+ 
+#[Clustering]
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ inventory_hostname }}:2380"
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ inventory_hostname }}:2379"
+ETCD_INITIAL_CLUSTER="{{ ETCD_NODES }}"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
+ETCD_INITIAL_CLUSTER_STATE="{{ CLUSTER_STATE }}"
+
+#[Security]
+ETCD_CERT_FILE="{{ etcd_ssl_dir }}/server.pem"
+ETCD_KEY_FILE="{{ etcd_ssl_dir }}/server-key.pem"
+ETCD_TRUSTED_CA_FILE="{{ etcd_ssl_dir }}/ca.pem"
+ETCD_CLIENT_CERT_AUTH="true"
+ETCD_PEER_CERT_FILE="{{ etcd_ssl_dir }}/server.pem"
+ETCD_PEER_KEY_FILE="{{ etcd_ssl_dir }}/server-key.pem"
+ETCD_PEER_TRUSTED_CA_FILE="{{ etcd_ssl_dir }}/ca.pem"
+ETCD_PEER_CLIENT_CERT_AUTH="true"

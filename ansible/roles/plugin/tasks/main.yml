@@ -1,0 +1,68 @@
+﻿- name: 绑定一个cluster-admin权限
+  shell: kubectl create clusterrolebinding system:anonymous   --clusterrole=cluster-admin   --user=system:anonymous
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+#加入coredns插件
+- name: 分发镜像
+  copy: src={{ base_dir }}/down/coredns.tar dest=/home
+
+- name: 装载镜像
+  shell: docker load -i /home/coredns.tar
+
+- name: 创建coredns.yaml
+  template: src=coredns.yml.j2 dest=/k8s/kubernetes/yml/coredns.yml
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+- name: 运行coredns
+  shell: "{{ bin_dir }}/kubectl apply -f /k8s/kubernetes/yml/coredns.yml"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+#加入descheduler插件
+- name: 分发镜像
+  copy: src={{ base_dir }}/down/descheduler.tar dest=/home
+
+- name: 装载镜像
+  shell: docker load -i /home/descheduler.tar
+
+- name: Send a cluster role yml
+  copy: src=descheduler_role.yml dest=/k8s/kubernetes/yml
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true 
+
+- name: Create a service account
+  shell: "kubectl create sa descheduler -n kube-system"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+- name: Bind the cluster role to the service account
+  shell: "kubectl create clusterrolebinding descheduler \
+    -n kube-system \
+    --clusterrole=descheduler \
+    --serviceaccount=kube-system:descheduler"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+- name: Send configmap yml
+  copy: src=configmap_descheduler.yml dest=/k8s/kubernetes/yml
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+- name: Create configmap 
+  shell: "kubectl create -f /k8s/kubernetes/yml/configmap_descheduler.yml"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+- name: Send CronJob yml
+  copy: src=cronjob_descheduler.yml dest=/k8s/kubernetes/yml
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+
+
+- name: Create CronJob
+  shell: "kubectl create -f /k8s/kubernetes/yml/cronjob_descheduler.yml"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+

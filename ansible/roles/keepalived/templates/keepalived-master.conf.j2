@@ -1,0 +1,84 @@
+global_defs {
+      router_id k8s              
+}
+
+
+vrrp_script chk_apiserver {
+    script "killall -0 kube-apiserver"
+    interval 3
+    timeout 9
+    fall 3
+    weight 20
+}
+
+
+vrrp_script chk_mongo {
+    # 如果script中的指令执行失败，那么相应的vrrp_instance的优先级会减少10个点
+    script "curl -k http://{{ inventory_hostname }}:27017" #注意修改！
+    interval 3
+    timeout 9
+    fall 2
+    rise 2
+}
+
+
+vrrp_instance mongho_HA1 {
+    state MASTER
+    interface {{ IF }}
+    virtual_router_id 11
+    priority 120
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass 123456
+    }
+
+    virtual_ipaddress {
+        {{ Mongo_VIP }}/24 dev {{ IF }}
+    }
+
+    track_script {
+         chk_mongo
+    }
+
+
+}
+
+vrrp_instance k8s_HA1 {
+    state BACKUP
+    interface {{ IF }}
+    virtual_router_id 10
+    priority 100
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass 123456
+    }
+
+    virtual_ipaddress {
+        {{ api_VIP }}/24 dev {{ IF }}
+    }
+
+    track_script {
+        chk_apiserver
+    }
+}	
+
+vrrp_instance pods_HA1 {
+    state MASTER
+    interface {{ IF }}
+    virtual_router_id 12
+    priority 120
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass 123456
+    }
+
+    virtual_ipaddress {
+        {{ Node_VIP }}/24 dev {{ IF }}
+    }
+}

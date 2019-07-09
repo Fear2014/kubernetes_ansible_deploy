@@ -1,0 +1,20 @@
+KUBE_APISERVER_OPTS="--logtostderr=true \
+--v=4 \
+--etcd-servers={{ ETCD_ENDPOINTS }} \
+--bind-address=0.0.0.0 \
+--secure-port=6443 \
+--advertise-address={{ MASTER_IP }} \
+--allow-privileged=true \
+--service-cluster-ip-range={{ SERVICE_CIDR }} \
+--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota,NodeRestriction \
+--authorization-mode=RBAC,Node \
+--enable-bootstrap-token-auth \
+--token-auth-file={{ k8s_ssl_dir }}/token.csv \
+--service-node-port-range={{ NODE_PORT_RANGE }} \
+--tls-cert-file={{ k8s_ssl_dir }}/server.pem  \
+--tls-private-key-file={{ k8s_ssl_dir }}/server-key.pem \
+--client-ca-file={{ k8s_ssl_dir }}/ca.pem \
+--service-account-key-file={{ k8s_ssl_dir }}/ca-key.pem \
+--etcd-cafile={{ etcd_ssl_dir }}/ca.pem \
+--etcd-certfile={{ etcd_ssl_dir }}/server.pem \
+--etcd-keyfile={{ etcd_ssl_dir }}/server-key.pem"

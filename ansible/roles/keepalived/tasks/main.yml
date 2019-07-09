@@ -1,0 +1,26 @@
+- name: 配置api主节点
+  template: src=keepalived-api-master.conf.j2 dest=/etc/keepalived/keepalived.conf
+  when: LB_ROLE == "api-master"
+  tags: restart_lb
+
+- name: 配置master主节点
+  template: src=keepalived-master.conf.j2 dest=/etc/keepalived/keepalived.conf
+  when: LB_ROLE == "master"
+  tags: restart_lb
+
+- name: 配置backup 备节点
+  template: src=keepalived-backup.conf.j2 dest=/etc/keepalived/keepalived.conf
+  when: LB_ROLE == "backup"
+  tags: restart_lb
+
+- name: daemon-reload for keepalived.service
+  shell: systemctl daemon-reload
+  tags: restart_lb
+
+- name: 开机启用keepalived服务
+  shell: systemctl enable keepalived
+  ignore_errors: true
+
+- name: 重启keepalived服务
+  shell: systemctl restart keepalived
+  tags: restart_lb

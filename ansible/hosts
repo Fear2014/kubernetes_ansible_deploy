@@ -1,0 +1,69 @@
+# 集群部署节点：一般为运行ansible 脚本的节点
+[deploy]
+10.109.1.95 NTP_ENABLED=no Mongo_VIP=10.109.1.96 Node_VIP=10.109.1.98
+
+# etcd集群请提供如下NODE_NAME，注意etcd集群必须是1,3,5,7...奇数个节点
+[etcd]
+10.109.1.95 NODE_NAME=etcd1
+10.109.1.91 NODE_NAME=etcd2
+10.109.1.92 NODE_NAME=etcd3
+
+[kube-master]
+10.109.1.95
+10.109.1.91
+
+[kube-node]
+10.109.1.91 ROLE_NAME=node1 NODE_ID=10.109.1.91
+10.109.1.92 ROLE_NAME=node2 NODE_ID=10.109.1.92
+10.109.1.93 ROLE_NAME=node3 NODE_ID=10.109.1.93
+
+# keepalived 
+[keepalived]
+10.109.1.95 LB_ROLE=api-master Mongo_VIP=10.109.1.96 api_VIP=10.109.1.97 Node_VIP=10.109.1.98  IF=ens33
+10.109.1.91 LB_ROLE=master Mongo_VIP=10.109.1.96 api_VIP=10.109.1.97 Node_VIP=10.109.1.98  IF=ens33  
+10.109.1.92 LB_ROLE=backup Mongo_VIP=10.109.1.96 api_VIP=10.109.1.97 Node_VIP=10.109.1.98  IF=ens33  
+10.109.1.93 LB_ROLE=backup Mongo_VIP=10.109.1.96 api_VIP=10.109.1.97 Node_VIP=10.109.1.98  IF=ens33  
+
+
+[all:vars]
+# ---------集群主要参数---------------
+#集群部署模式：allinone, single-master, multi-master
+DEPLOY_MODE=multi-master
+
+REAL_MASTER= 10.109.1.95
+# 集群 MASTER IP即 LB节点VIP地址，为区别与默认apiserver端口，设置VIP监听的服务端口8443
+# 公有云上请使用云负载均衡内网地址和监听端口
+MASTER_IP="10.109.1.97"
+KUBE_APISERVER="https://{{ MASTER_IP }}:6443"
+
+# 集群网络插件，目前支持calico, flannel, kube-router, cilium
+CLUSTER_NETWORK="flannel"
+
+# 服务网段 (Service CIDR），注意不要与内网已有网段冲突
+SERVICE_CIDR="10.68.0.0/16"
+
+# POD 网段 (Cluster CIDR），注意不要与内网已有网段冲突
+CLUSTER_CIDR="172.20.0.0/16"
+
+# 服务端口范围 (NodePort Range)
+NODE_PORT_RANGE="1-30000"
+
+# kubernetes 服务 IP (预分配，一般是 SERVICE_CIDR 中第一个IP)
+CLUSTER_KUBERNETES_SVC_IP="10.68.0.1"
+
+# 集群 DNS 服务 IP (从 SERVICE_CIDR 中预分配)
+CLUSTER_DNS_SVC_IP="10.68.0.2"
+
+# 集群 DNS 域名
+CLUSTER_DNS_DOMAIN="cluster.local."
+
+# ---------附加参数--------------------
+#默认二进制文件目录
+bin_dir="/usr/bin"
+
+#证书目录
+etcd_ssl_dir="/k8s/etcd/ssl"
+k8s_ssl_dir="/k8s/kubernetes/ssl"
+
+#部署目录，即 ansible 工作目录，建议不要修改
+base_dir="/etc/ansible"

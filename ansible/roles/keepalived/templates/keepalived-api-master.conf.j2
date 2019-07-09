@@ -1,0 +1,35 @@
+global_defs {
+    router_id k8s              
+}
+
+
+vrrp_script chk_apiserver {
+    script "killall -0 kube-apiserver"
+    interval 3
+    timeout 9
+    fall 3
+    weight 20
+}
+
+
+vrrp_instance k8s_HA1 {
+    state MASTER
+    interface {{ IF }}
+    virtual_router_id 10
+    priority 120
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass 123456
+    }
+
+    virtual_ipaddress {
+        {{ api_VIP }}/24 dev {{ IF }}
+    }
+
+    track_script {
+        chk_apiserver
+    }
+}	
+

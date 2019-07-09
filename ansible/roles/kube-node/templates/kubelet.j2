@@ -1,0 +1,10 @@
+KUBELET_OPTS="--logtostderr=true \
+--v=4 \
+--hostname-override={{ inventory_hostname }} \
+--kubeconfig=/k8s/kubernetes/cfg/kubelet.kubeconfig \
+--bootstrap-kubeconfig=/k8s/kubernetes/cfg/bootstrap.kubeconfig \
+--config=/k8s/kubernetes/cfg/kubelet.config \
+--network-plugin=cni \
+--cni-conf-dir=/etc/cni/net.d \
+--cert-dir={{ k8s_ssl_dir }} \
+--pod-infra-container-image=mirrorgooglecontainers/pause-amd64 "
