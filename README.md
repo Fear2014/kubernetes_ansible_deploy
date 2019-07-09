@@ -27,9 +27,8 @@ ansible 一键部署 kubernetes高可用框架（kube-router版）
 
 ![Image text](https://github.com/Fear2014/kubernetes_deploy/blob/master/images/Kubernetes_kube-router.png)
 
-![Image text](https://nj.sfere-elec.com:8090/git/deploy/njdt-kubernetes/raw/branch/kube-router/images/kubernetes%20%e7%bb%84%e7%bb%87%e5%9b%be_kube-routrer.png)
+![Image text](https://github.com/Fear2014/kubernetes_deploy/blob/master/images/kubernetes%20%E7%BB%84%E7%BB%87%E5%9B%BE_kube-routrer.png)
 
-![Image text](https://nj.sfere-elec.com:8090/git/deploy/njdt-kubernetes/raw/branch/kube-router/images/%e4%b8%9a%e5%8a%a1%e7%b3%bb%e7%bb%9f%e9%83%a8%e7%bd%b2%e6%a1%86%e6%9e%b6.png)
 
 
 使用说明
