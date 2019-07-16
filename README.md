@@ -25,9 +25,9 @@ ansible 一键部署 kubernetes高可用框架（kube-router版）
 
 > 3、kube-router使用ipvs性能损失最小，时延最小，其他网络插件性能差距不大  kube-router > calico > canal = flannel = romana
 
-![Image text](https://github.com/Fear2014/kubernetes_deploy/blob/master/images/Kubernetes_kube-router.png)
+![Image text](https://github.com/Fear2014/kubernetes_ansible_deploy/blob/master/images/Kubernetes_kube-router.png)
 
-![Image text](https://github.com/Fear2014/kubernetes_deploy/blob/master/images/kubernetes%20%E7%BB%84%E7%BB%87%E5%9B%BE_kube-routrer.png)
+![Image text](https://github.com/Fear2014/kubernetes_ansible_deploy/blob/master/images/kubernetes%20%E7%BB%84%E7%BB%87%E5%9B%BE_kube-routrer.png)
 
 
 

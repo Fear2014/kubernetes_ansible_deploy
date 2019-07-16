@@ -11,8 +11,8 @@
 # bits.
 #
 # By default this script does nothing.
-#route add -net 10.109.0.0/24 gw 10.109.29.254 ens37
 
-route add gw 10.109.29.254  ens37
+
+route add -net 194.166.0.0/16 gw 194.166.29.254 netmask 255.255.0.0 dev ens37
 
 exit 0
