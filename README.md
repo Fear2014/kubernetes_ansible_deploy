@@ -64,26 +64,32 @@ ansible 一键部署 kubernetes高可用框架（kube-router版）
 配置文件说明
 -----
 > 1、coredns的配置文件coredns.yml.j2
->  Corefile: |
->    .:53 {
->        errors
->        health
->        kubernetes cluster.local  {{ SERVICE_CIDR }} {
->          pods insecure
->          upstream
->          fallthrough in-addr.arpa ip6.arpa
->        }
->        prometheus :9153
->        forward . 8.8.8.8:53    #修改为自定义的DNS地址，省去修改resolv.conf的麻烦
->        cache 30
->        loop
->        reload
->        loadbalance
+```
+  Corefile: |
+    .:53 {
+        errors
+        health
+        kubernetes cluster.local  {{ SERVICE_CIDR }} {
+          pods insecure
+          upstream
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        prometheus :9153
+        forward . 8.8.8.8:53    #修改为自定义的DNS地址，省去修改resolv.conf的麻烦
+        cache 30
+        loop
+        reload
+        loadbalance
+```
 
 > 2、api-server配置文件说明：
->	--bind-address=0.0.0.0 \		#此为设置安全端口监听的ip，选择监听所有
->	--advertise-address={{ MASTER_IP }} \	#此为发布给集群的api-server的地址，设置为api-server-VIP
+```
+	--bind-address=0.0.0.0 \		#此为设置安全端口监听的ip，选择监听所有
+	--advertise-address={{ MASTER_IP }} \	#此为发布给集群的api-server的地址，设置为api-server-VIP
+```
 
 > 2、controller-manager/kube-schduler配置文件说明：
->	--address=127.0.0.1	\					#设置为本地地址
->   --master=127.0.0.1:8080 \				#设置本地的api地址，保证3个组件都在同一个服务器上运行
+```
+	--address=127.0.0.1	\					#设置为本地地址
+   	--master=127.0.0.1:8080 \				#设置本地的api地址，保证3个组件都在同一个服务器上运行
+```
