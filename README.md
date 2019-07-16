@@ -36,6 +36,7 @@ ansible 一键部署 kubernetes高可用框架（kube-router版）
 > 运行startup.sh,通过ansible在master节点去部署4台服务器
 	
 > 框架目录结构：
+
 >               /etc/ansible/ |-bin
 >                             |-down
 >                             |-roles	
